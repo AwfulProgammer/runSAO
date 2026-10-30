@@ -1,7 +1,7 @@
 """
-Out-of-the-Box Metrics Demo — Galileo
+Out-of-the-Box Metrics Demo — Splunk AO
 ======================================
-Demonstrates how to attach Galileo's built-in preset metrics
+Demonstrates how to attach Splunk AO's built-in preset metrics
 to experiments, which are offline evaluations against a dataset. 
 
 Use case: a simple RAG-style Q&A agent over a fixed knowledge base.
@@ -25,17 +25,17 @@ Setup:
 
 import os
 from dotenv import load_dotenv
-from galileo.openai import openai
-from galileo import log
-from galileo.schema.metrics import GalileoMetrics
-from galileo.experiments import run_experiment
+from splunk_ao.openai import openai
+from splunk_ao import log
+from splunk_ao.schema.metrics import SplunkAOEvaluators
+from splunk_ao.experiments import run_experiment
 
 load_dotenv("../.env")
-project=os.environ.get("GALILEO_PROJECT_NAME")
-log_stream=os.environ.get("GALILEO_LOG_STREAM")
+project=os.environ.get("SPLUNK_AO_PROJECT")
+agent_stream=os.environ.get("SPLUNK_AO_AGENT_STREAM")
 
 # Confirm that environment variables are properly mapped
-print(f"Loaded env variables: galileo console: {os.environ.get("GALILEO_CONSOLE_URL")} | Project: {project} | Log Stream: {log_stream}")
+print(f"Loaded env variables: splunk ao realm: {os.environ.get("SPLUNK_AO_REALM")} | Project: {project} | Agent Stream: {agent_stream}")
 
 
 client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
@@ -111,8 +111,8 @@ def run_rag_agent(question: str) -> dict:
 def _run_experiment():
     """
     Run an offline experiment against a fixed dataset, scoring each row
-    with Galileo's out-of-the-box metrics.
-    Scores appear in the Experiments tab in the Galileo console.
+    with Splunk AO's out-of-the-box metrics.
+    Scores appear in the Experiments tab in the Splunk Agent Observability UI.
     """
 
     # Dataset: list of (question, expected_answer) pairs
@@ -138,12 +138,12 @@ def _run_experiment():
 
     # Select which metrics to compute
     metrics = [
-        GalileoMetrics.correctness,
-        GalileoMetrics.completeness,
-        GalileoMetrics.context_adherence,
-        GalileoMetrics.instruction_adherence,
-        GalileoMetrics.chunk_attribution_utilization,
-        GalileoMetrics.chunk_relevance
+        SplunkAOEvaluators.correctness,
+        SplunkAOEvaluators.completeness,
+        SplunkAOEvaluators.context_adherence,
+        SplunkAOEvaluators.instruction_adherence,
+        SplunkAOEvaluators.chunk_attribution_utilization,
+        SplunkAOEvaluators.chunk_relevance
     ]
 
     print("\n[Experiment] Running offline evaluation with preset metrics...")
@@ -155,14 +155,14 @@ def _run_experiment():
         project=project
     )
 
-    print("[Experiment] Done — view results in app.galileo.ai → Experiments")
+    print("[Experiment] Done — view results in the Splunk Agent Observability UI → Experiments")
 
 
 # ── Main ───────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("Galileo Out-of-the-Box Metrics Demo")
+    print("Splunk AO Out-of-the-Box Metrics Demo")
     print("=" * 60)
 
     # Offline experiment with explicit metric selection
@@ -170,5 +170,5 @@ if __name__ == "__main__":
 
     print("\n" + "=" * 60)
     print("Next steps:")
-    print("  1. Open the Galileo UI → Experiments and find this experiment.")
+    print("  1. Open the Splunk Agent Observability UI → Experiments and find this experiment.")
     print("  2. Navigate throught the traces to see the metrics scores.")

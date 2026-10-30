@@ -1,16 +1,16 @@
 """
-Experiments Demo — Galileo
+Experiments Demo — Splunk AO
 ===========================
-Demonstrates two approaches to running experiments in Galileo:
+Demonstrates two approaches to running experiments in Splunk AO:
 
-  1. Prompt template experiment — Galileo owns the LLM call and variable substitution
+  1. Prompt template experiment — Splunk AO owns the LLM call and variable substitution
   2. Custom function experiment — your application code runs; all spans are traced
 
 Also includes a standalone unit test (test_experiments.py pattern) showing how
 to embed experiments in a CI/CD pipeline with a metric threshold assertion.
 
 Run this script to see both experiment approaches in action, then compare the
-two results in the Galileo Console using the "Compare Experiments" feature.
+two results in the Splunk Agent Observability UI using the "Compare Experiments" feature.
 
 This script assumes the .env file is located
 in the parent directory, and it's properly configured.
@@ -23,19 +23,19 @@ Setup:
 
 import os
 from dotenv import load_dotenv
-from galileo import GalileoMetrics, Message, MessageRole, log
-from galileo.datasets import create_dataset, get_dataset
-from galileo.experiments import run_experiment
-from galileo.openai import openai
-from galileo.prompts import create_prompt, get_prompt
+from splunk_ao import SplunkAOEvaluators, Message, MessageRole, log
+from splunk_ao.datasets import create_dataset, get_dataset
+from splunk_ao.experiments import run_experiment
+from splunk_ao.openai import openai
+from splunk_ao.prompts import create_prompt, get_prompt
 
 load_dotenv("../.env")
 
-project=os.environ.get("GALILEO_PROJECT_NAME")
-log_stream=os.environ.get("GALILEO_LOG_STREAM")
+project=os.environ.get("SPLUNK_AO_PROJECT")
+agent_stream=os.environ.get("SPLUNK_AO_AGENT_STREAM")
 
 # Confirm that environment variables are properly mapped
-print(f"Loaded env variables: galileo console: {os.environ.get("GALILEO_CONSOLE_URL")} | Project: {project} | Log Stream: {log_stream}")
+print(f"Loaded env variables: splunk ao realm: {os.environ.get("SPLUNK_AO_REALM")} | Project: {project} | Agent Stream: {agent_stream}")
 
 
 # ---------------------------------------------------------------------------
@@ -75,7 +75,7 @@ except Exception as e:
 
 # ---------------------------------------------------------------------------
 # Experiment 1: Prompt template approach
-# Galileo handles variable substitution, the LLM call, and metric scoring.
+# Splunk AO handles variable substitution, the LLM call, and metric scoring.
 # Use this when you're iterating on the prompt itself.
 # ---------------------------------------------------------------------------
 print("--- Experiment 1: Prompt Template ---")
@@ -106,8 +106,8 @@ results_v1 = run_experiment(
     dataset=dataset,
     prompt_template=prompt,
     metrics=[
-        GalileoMetrics.correctness,
-        GalileoMetrics.completeness,
+        SplunkAOEvaluators.correctness,
+        SplunkAOEvaluators.completeness,
     ],
     project=project,
 )
@@ -135,7 +135,7 @@ def support_bot(input: dict) -> str:
     """
     The actual support bot function.
     Using @log means every LLM call inside is traced as a span.
-    Galileo's experiment runner creates a new trace per dataset row —
+    Splunk AO's experiment runner creates a new trace per dataset row —
     do NOT start a new trace or flush manually here.
     """
     query = input["input"] if isinstance(input, dict) else input
@@ -156,8 +156,8 @@ results_v2 = run_experiment(
     dataset=dataset,
     function=support_bot,
     metrics=[
-        GalileoMetrics.correctness,
-        GalileoMetrics.completeness,
+        SplunkAOEvaluators.correctness,
+        SplunkAOEvaluators.completeness,
     ],
     project=project,
 )
@@ -168,7 +168,7 @@ print("Experiment 2 complete. View at the link above.\n")
 # Summary: how to compare in the Console
 # ---------------------------------------------------------------------------
 print("Both experiments are logged. To compare:")
-print("  1. Open the Experiments tab in the Galileo Console")
+print("  1. Open the Experiments tab in the Splunk Agent Observability UI")
 print("  2. Check the boxes next to 'support-bot-prompt-v1' and 'support-bot-function-v1'")
 print("  3. Click 'Compare Experiments'")
 print("  4. Review metrics, outputs, latency, and token usage side by side.\n")

@@ -1,12 +1,12 @@
 """
-Log Streams with Galileo — Sample Application
+Agent Streams with Splunk AO — Sample Application
 
-Demonstrates how to send traces to a Galileo Log Stream using the
-Galileo OpenAI wrapper. All LLM calls are automatically logged —
+Demonstrates how to send traces to a Splunk AO Agent Stream using the
+Splunk AO OpenAI wrapper. All LLM calls are automatically logged —
 no manual instrumentation needed.
 
-This script runs a few different prompts; open your Galileo dashboard
-to see the traces appear in your Log Stream.
+This script runs a few different prompts; open your Splunk Agent Observability UI
+to see the traces appear in your Agent Stream.
 
 This script assumes the .env file is located
 in the parent directory, and it's properly configured.
@@ -19,18 +19,18 @@ Setup:
 
 import os
 from dotenv import load_dotenv
-from galileo.openai import openai
-from galileo import galileo_context
+from splunk_ao.openai import openai
+from splunk_ao import splunk_ao_context
 
 load_dotenv("../.env")
-project=os.environ.get("GALILEO_PROJECT_NAME")
-log_stream=os.environ.get("GALILEO_LOG_STREAM")
+project=os.environ.get("SPLUNK_AO_PROJECT")
+agent_stream=os.environ.get("SPLUNK_AO_AGENT_STREAM")
 
 # Confirm that environment variables are properly mapped
-print(f"Loaded env variables: galileo console: {os.environ.get("GALILEO_CONSOLE_URL")} | Project: {project} | Log Stream: {log_stream}")
+print(f"Loaded env variables: splunk ao realm: {os.environ.get("SPLUNK_AO_REALM")} | Project: {project} | Agent Stream: {agent_stream}")
 
-# Galileo wraps the OpenAI client automatically.
-# Traces are sent to the project and log stream set in your .env file.
+# Splunk AO wraps the OpenAI client automatically.
+# Traces are sent to the project and agent stream set in your .env file.
 client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 
@@ -50,13 +50,13 @@ def ask(question: str) -> str:
 
 
 if __name__ == "__main__":
-    # Run a few sample prompts — each becomes a trace in your Log Stream
-    with galileo_context(project=project, log_stream=log_stream):
-        galileo_context.start_session(name="Lab 01 - Why Agent Observability Matters")
+    # Run a few sample prompts — each becomes a trace in your Agent Stream
+    with splunk_ao_context(project=project, agent_stream=agent_stream):
+        splunk_ao_context.start_session(name="Lab 01 - Why Agent Observability Matters")
         ask("Summarize the impact of rising interest rates on technology sector and how it might affect valuations and investor sentiment in the short term.")
         ask("What are the best growth stocks to invest in?")
         ask("What would be the impact of rising interest rages?")
 
-    print("✓ Done — open your Galileo dashboard to see the traces.")
-    print(f"  Project:    {os.environ.get('GALILEO_PROJECT')}")
-    print(f"  Log Stream: {os.environ.get('GALILEO_LOG_STREAM')}")
+    print("✓ Done — open your Splunk Agent Observability UI to see the traces.")
+    print(f"  Project:    {os.environ.get('SPLUNK_AO_PROJECT')}")
+    print(f"  Agent Stream: {os.environ.get('SPLUNK_AO_AGENT_STREAM')}")

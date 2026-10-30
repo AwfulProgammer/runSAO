@@ -1,16 +1,17 @@
 import os
 import time
 from dotenv import load_dotenv
-from galileo import openai, log
-from galileo.schema.metrics import GalileoMetrics
-from galileo.experiments import run_experiment, get_experiment
+from splunk_ao.openai import openai
+from splunk_ao import log
+from splunk_ao.schema.metrics import SplunkAOEvaluators
+from splunk_ao.experiments import run_experiment, get_experiment
 
 load_dotenv("../.env")
-project=os.environ.get("GALILEO_PROJECT_NAME")
-log_stream=os.environ.get("GALILEO_LOG_STREAM")
+project=os.environ.get("SPLUNK_AO_PROJECT")
+agent_stream=os.environ.get("SPLUNK_AO_AGENT_STREAM")
 
 # Confirm that environment variables are properly mapped
-print(f"Loaded env variables: galileo console: {os.environ.get("GALILEO_CONSOLE_URL")} | Project: {project} | Log Stream: {log_stream}")
+print(f"Loaded env variables: splunk ao realm: {os.environ.get("SPLUNK_AO_REALM")} | Project: {project} | Agent Stream: {agent_stream}")
 
 
 client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
@@ -86,8 +87,8 @@ def run_rag_agent(question: str) -> dict:
 def test_support_bot_correctness():
     """
     Run an offline experiment against a fixed dataset, scoring each row
-    with Galileo's out-of-the-box metrics.
-    Scores appear in the Experiments tab in the Galileo console.
+    with Splunk AO's out-of-the-box metrics.
+    Scores appear in the Experiments tab in the Splunk Agent Observability UI.
     """
 
     # Dataset: list of (question, expected_answer) pairs
@@ -116,7 +117,7 @@ def test_support_bot_correctness():
         experiment_name="ci-support-bot-test",
         dataset=dataset,
         function=run_rag_agent,
-        metrics=[GalileoMetrics.completeness],
+        metrics=[SplunkAOEvaluators.completeness],
         project=project
     )
 
@@ -144,7 +145,7 @@ def test_support_bot_correctness():
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("Galileo Experiment Test")
+    print("Splunk AO Experiment Test")
     print("=" * 60)
 
     # Offline experiment with explicit metric selection
@@ -152,5 +153,5 @@ if __name__ == "__main__":
 
     print("\n" + "=" * 60)
     print("Next steps:")
-    print("  1. Open the Galileo UI → Experiments and find this experiment.")
+    print("  1. Open the Splunk Agent Observability UI → Experiments and find this experiment.")
     print("  2. Navigate throught the traces to see the metrics scores.")

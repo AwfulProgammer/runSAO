@@ -2,7 +2,7 @@
 Guardrails with Agent Control — Demo
 ======================================
 Demonstrates runtime guardrails using Agent Control (https://agentcontrol.dev/),
-the open-source control plane for AI agents from Galileo.
+the open-source control plane for AI agents from Splunk AO.
 
 Shows two control types on the same database agent:
   1. DENY  — blocks destructive SQL (DROP, DELETE, TRUNCATE) before it executes
@@ -13,7 +13,7 @@ The agent code itself has NO validation logic. All governance is centralized in 
 Agent Control server and managed without modifying or redeploying agent code.
 
 Prerequisites:
-  1. Create the Controls in the Galileo UI as shown in the Hands-on Video
+  1. Create the Controls in the Splunk Agent Observability UI as shown in the Hands-on Video
   2. Ensure that the .env file is populated with the correct values
   3. Install the pre-requisites from the requirements.txt file
 
@@ -33,25 +33,25 @@ from dotenv import load_dotenv
 from typing import Any
 
 load_dotenv()
-project=os.environ.get("GALILEO_PROJECT")
-log_stream=os.environ.get("GALILEO_LOG_STREAM")
+project=os.environ.get("SPLUNK_AO_PROJECT")
+agent_stream=os.environ.get("SPLUNK_AO_AGENT_STREAM")
 
 OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
 AGENT_CONTROL_URL = os.environ.get("AGENT_CONTROL_URL")
 AGENT_NAME = os.environ.get("AGENT_CONTROL_AGENT_NAME")
-GALILEO_API_KEY = os.environ.get("GALILEO_API_KEY")
+SPLUNK_AO_API_KEY = os.environ.get("SPLUNK_AO_API_KEY")
 API_KEY_HEADER = os.environ.get("API_KEY_HEADER") or os.environ.get("AGENT_CONTROL_API_KEY_HEADER")
 
 
 import agent_control
 from agent_control import ControlSteerError, ControlViolationError, control
 
-from galileo.log_streams import get_log_stream
-from galileo import GalileoLogger
+from splunk_ao.agent_streams import get_agent_stream
+from splunk_ao import SplunkAOLogger
 from openai import OpenAI
 
 # Confirm that environment variables are properly mapped
-print(f"Loaded env variables: galileo console: {os.environ.get('GALILEO_CONSOLE_URL')} | Project: {project} | Log Stream: {log_stream}")
+print(f"Loaded env variables: splunk ao realm: {os.environ.get('SPLUNK_AO_REALM')} | Project: {project} | Agent Stream: {agent_stream}")
 
 
 # --------------------------------------------------------------------------------------
@@ -204,16 +204,16 @@ conn.close()
 
 
 # --------------------------------------------------------------------------------------
-# Initialize the Galileo context for this environment and create supporting functions
+# Initialize the Splunk AO context for this environment and create supporting functions
 # --------------------------------------------------------------------------------------
-# galileo_context.init(project=project, log_stream=log_stream)
+# splunk_ao_context.init(project=project, agent_stream=agent_stream)
 
-logger = GalileoLogger(project=project, log_stream=log_stream)
+logger = SplunkAOLogger(project=project, agent_stream=agent_stream)
 logger.enable_agent_control()
 
-def get_log_stream_id():
-    log_stream_data = get_log_stream(name=log_stream, project_name=project)
-    return log_stream_data.id
+def get_agent_stream_id():
+    agent_stream_data = get_agent_stream(name=agent_stream, project_name=project)
+    return agent_stream_data.id
 
 
 # --------------------------------------------------------------------------------------
@@ -464,20 +464,20 @@ def main():
   
     session_id = logger.start_session(name="Lab 09 - Guardrails")
 
-    log_stream_id = get_log_stream_id()
-    print(f"Log stream ID: {log_stream_id}")
+    agent_stream_id = get_agent_stream_id()
+    print(f"Agent stream ID: {agent_stream_id}")
 
     # Initiate Agent Control agent
     agent_control.init(
         agent_name=AGENT_NAME,
         agent_description="Text-to-SQL Support Agent",
         server_url=AGENT_CONTROL_URL,
-        api_key=GALILEO_API_KEY,
+        api_key=SPLUNK_AO_API_KEY,
         api_key_header=API_KEY_HEADER,
         observability_enabled=True,
         observability_sink_name="registered",
         target_type="log_stream",
-        target_id=log_stream_id,
+        target_id=agent_stream_id,
     )
 
 

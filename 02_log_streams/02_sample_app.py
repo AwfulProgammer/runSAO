@@ -1,9 +1,9 @@
 """
-Agent Observability with Galileo — Sample Application
-Topic: Log Streams
+Agent Observability with Splunk AO — Sample Application
+Topic: Agent Stream
 
-This script demonstrates a simple tool-using agent instrumented with Galileo.
-Galileo captures every LLM call, tool invocation, and span so you can see
+This script demonstrates a simple tool-using agent instrumented with Splunk AO.
+Splunk AO captures every LLM call, tool invocation, and span so you can see
 exactly what the agent did, why, and where things went wrong.
 
 This script assumes the .env file is located
@@ -18,18 +18,18 @@ Setup:
 import os
 import json
 from dotenv import load_dotenv
-from galileo import log, galileo_context
-from galileo.openai import OpenAI
+from splunk_ao import log, splunk_ao_context
+from splunk_ao.openai import openai
 
 
 load_dotenv("../.env")
-project=os.environ.get("GALILEO_PROJECT_NAME")
-log_stream=os.environ.get("GALILEO_LOG_STREAM")
+project=os.environ.get("SPLUNK_AO_PROJECT")
+agent_stream=os.environ.get("SPLUNK_AO_AGENT_STREAM")
 
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 # Confirm that environment variables are properly mapped
-print(f"Loaded env variables: galileo console: {os.environ.get("GALILEO_CONSOLE_URL")} | Project: {project} | Log Stream: {log_stream}")
+print(f"Loaded env variables: splunk ao realm: {os.environ.get("SPLUNK_AO_REALM")} | Project: {project} | Agent Stream: {agent_stream}")
 
 
 # --- Simple tools the agent can call ---
@@ -106,12 +106,12 @@ TOOL_MAP = {
 }
 
 
-# --- Agent loop instrumented with Galileo ---
+# --- Agent loop instrumented with Splunk AO ---
 
 @log(span_type="agent", name="Agent Workflow")
 def run_agent(user_query: str):
     """
-    Run a simple tool-using agent and log every step to Galileo.
+    Run a simple tool-using agent and log every step to Splunk AO.
     This demonstrates agent observability: every LLM call, tool call,
     and final response is captured as a trace with spans.
     """
@@ -178,8 +178,8 @@ def run_agent(user_query: str):
 # --- Run sample queries ---
 
 if __name__ == "__main__":
-    with galileo_context(project=project, log_stream=log_stream):
-        galileo_context.start_session(name="Lab 02 - Log Streams")
+    with splunk_ao_context(project=project, agent_stream=agent_stream):
+        splunk_ao_context.start_session(name="Lab 02 - Agent Stream")
 
         # Query 1: Normal flow — should work fine
         run_agent("What is the balance for account ACC-001?")
@@ -190,5 +190,5 @@ if __name__ == "__main__":
         # Query 3: Ambiguous query — watch how the agent handles it
         run_agent("Can I get a loan?")
 
-    print("\n\nOpen your Galileo dashboard to see the traces for these 3 runs.")
+    print("\n\nOpen your Splunk Agent Observability UI to see the traces for these 3 runs.")
     print("Look for differences in tool selection quality and context adherence across the queries.")

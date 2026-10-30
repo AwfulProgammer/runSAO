@@ -1,7 +1,7 @@
 """
-Datasets Demo — Galileo
+Datasets Demo — Splunk AO
 ========================
-Demonstrates the full dataset lifecycle in Galileo:
+Demonstrates the full dataset lifecycle in Splunk AO:
   1. Create a named, versioned dataset via the SDK
   2. Add new rows to an existing dataset (creates a new version)
   3. View version history
@@ -19,18 +19,18 @@ Setup:
 
 import os
 from dotenv import load_dotenv
-from galileo.datasets import (Dataset, create_dataset, get_dataset, get_dataset_version_history)
-from galileo.experiments import run_experiment
-from galileo.openai import openai
-from galileo import GalileoMetrics, log
+from splunk_ao.datasets import (Dataset, create_dataset, get_dataset, get_dataset_version_history)
+from splunk_ao.experiments import run_experiment
+from splunk_ao.openai import openai
+from splunk_ao import SplunkAOEvaluators, log
 
 load_dotenv("../.env")
 
-project=os.environ.get("GALILEO_PROJECT_NAME")
-log_stream=os.environ.get("GALILEO_LOG_STREAM")
+project=os.environ.get("SPLUNK_AO_PROJECT")
+agent_stream=os.environ.get("SPLUNK_AO_AGENT_STREAM")
 
 # Confirm that environment variables are properly mapped
-print(f"Loaded env variables: galileo console: {os.environ.get("GALILEO_CONSOLE_URL")} | Project: {project} | Log Stream: {log_stream}")
+print(f"Loaded env variables: splunk ao realm: {os.environ.get("SPLUNK_AO_REALM")} | Project: {project} | Agent Stream: {agent_stream}")
 
 
 # ---------------------------------------------------------------------------
@@ -98,7 +98,7 @@ for version in history.versions:
 print()
 
 # ---------------------------------------------------------------------------
-# LLM runner — wrapped by Galileo for automatic tracing
+# LLM runner — wrapped by Splunk AO for automatic tracing
 # ---------------------------------------------------------------------------
 client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
@@ -139,10 +139,10 @@ results = run_experiment(
     dataset=saved_dataset,  # use the saved, versioned dataset
     function=support_assistant,
     metrics=[
-        GalileoMetrics.correctness,
-        GalileoMetrics.completeness,
+        SplunkAOEvaluators.correctness,
+        SplunkAOEvaluators.completeness,
     ],
 )
 
-print("\nExperiment complete! Follow the link above to view results in the Galileo Console.")
+print("\nExperiment complete! Follow the link above to view results in the Splunk Agent Observability UI.")
 print("\nTip: In the Console, filter results by metadata.category to analyze specific test subsets.")

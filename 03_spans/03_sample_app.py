@@ -1,14 +1,14 @@
 """
-Galileo Span Types — Sample Application
+Splunk AO Span Types — Sample Application
 
-Demonstrates all five Galileo span types using the @log decorator:
+Demonstrates all five Splunk AO span types using the @log decorator:
   - Workflow:  the top-level container span
   - Agent:     a reasoning/planning step
   - Retriever: a RAG retrieval step (mocked — no vector DB needed)
   - Tool:      an external tool call (mocked)
-  - LLM:       automatic via the Galileo OpenAI wrapper
+  - LLM:       automatic via the Splunk AO OpenAI wrapper
 
-Run this script and open your Galileo dashboard to see a trace with
+Run this script and open your Splunk Agent Observability UI to see a trace with
 the full nested span hierarchy.
 
 This script assumes the .env file is located
@@ -22,22 +22,22 @@ Setup:
 
 import os
 from dotenv import load_dotenv
-from galileo.openai import openai
-from galileo import log, galileo_context
+from splunk_ao.openai import openai
+from splunk_ao import log, splunk_ao_context
 
 load_dotenv("../.env")
-project=os.environ.get("GALILEO_PROJECT_NAME")
-log_stream=os.environ.get("GALILEO_LOG_STREAM")
+project=os.environ.get("SPLUNK_AO_PROJECT")
+agent_stream=os.environ.get("SPLUNK_AO_AGENT_STREAM")
 
 # Confirm that environment variables are properly mapped
-print(f"Loaded env variables: galileo console: {os.environ.get("GALILEO_CONSOLE_URL")} | Project: {project} | Log Stream: {log_stream}")
+print(f"Loaded env variables: splunk ao realm: {os.environ.get("SPLUNK_AO_REALM")} | Project: {project} | Agent Stream: {agent_stream}")
 
 
 client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 # ---------------------------------------------------------------------------
 # Mock retriever — behaves like a real RAG retrieval step,
-# returns a list of document strings that Galileo captures as retrieved docs.
+# returns a list of document strings that Splunk AO captures as retrieved docs.
 # ---------------------------------------------------------------------------
 
 @log(span_type="retriever", name="knowledge_base_search")
@@ -132,7 +132,7 @@ def generate_answer(user_query: str, context: str) -> str:
 def handle_query(user_query: str) -> str:
     """
     Top-level workflow: orchestrates planning, retrieval/tool use, and response.
-    This function becomes the root workflow span in Galileo.
+    This function becomes the root workflow span in Splunk AO.
     """
     print(f"\nQuery: {user_query}")
 
@@ -165,16 +165,16 @@ def handle_query(user_query: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Run sample queries — each produces a full span hierarchy in Galileo.
+# Run sample queries — each produces a full span hierarchy in Splunk AO.
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    with galileo_context(project=project, log_stream=log_stream):
-        galileo_context.start_session(name="Lab 03 - Spans")   
+    with splunk_ao_context(project=project, agent_stream=agent_stream):
+        splunk_ao_context.start_session(name="Lab 03 - Spans")   
         handle_query("How do I get a refund for my order ID ORD-456?")
         handle_query("What kind of shipping options do you offer?")
         handle_query("How can I manage my account?")
 
-    print("✓ Done — open your Galileo dashboard to inspect the span hierarchy.")
+    print("✓ Done — open your Splunk Agent Observability UI to inspect the span hierarchy.")
     print(f"  Project:    {project}")
-    print(f"  Log Stream: {log_stream}")
+    print(f"  Agent Stream: {agent_stream}")

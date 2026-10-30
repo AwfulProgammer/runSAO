@@ -1,14 +1,14 @@
 """
-Production Monitoring Demo — Galileo
+Production Monitoring Demo — Splunk AO
 ======================================
 Demonstrates a production-instrumented chatbot application with:
   - Session management (one session per conversation)
-  - Full trace and span hierarchy via the @log decorator + Galileo OpenAI wrapper
+  - Full trace and span hierarchy via the @log decorator + Splunk AO OpenAI wrapper
   - Rich tags and metadata for failure mode analysis
-  - Log stream metrics configuration via SDK
+  - Agent stream metrics configuration via SDK
 
 Run this script to simulate 5 chatbot conversations being logged to the
-'production' Log stream. Then open the Galileo Console to explore:
+'production' Agent stream. Then open the Splunk Agent Observability UI to explore:
   - Session-level metric scores
   - Individual trace span trees
   - Filtering by metadata (user tier, prompt version, session type)
@@ -34,29 +34,29 @@ import os
 import uuid
 import time
 from dotenv import load_dotenv
-from galileo import GalileoMetrics
-from galileo.log_streams import enable_metrics
-from galileo import GalileoLogger, galileo_context, log
+from splunk_ao import SplunkAOEvaluators
+from splunk_ao.agent_streams import enable_evaluators
+from splunk_ao import SplunkAOLogger, splunk_ao_context, log
 from openai import OpenAI
 
 load_dotenv("../.env")
-project=os.environ.get("GALILEO_PROJECT_NAME")
-log_stream=os.environ.get("GALILEO_LOG_STREAM")
+project=os.environ.get("SPLUNK_AO_PROJECT")
+agent_stream=os.environ.get("SPLUNK_AO_AGENT_STREAM")
 
 # Confirm that environment variables are properly mapped
-print(f"Loaded env variables: galileo console: {os.environ.get("GALILEO_CONSOLE_URL")} | Project: {project} | Log Stream: {log_stream}")
+print(f"Loaded env variables: splunk ao realm: {os.environ.get("SPLUNK_AO_REALM")} | Project: {project} | Agent Stream: {agent_stream}")
 
 # ---------------------------------------------------------------------------
-# Step 1: Enable metrics on the Log stream (runs once at startup)
+# Step 1: Enable metrics on the Agent stream (runs once at startup)
 # In production, call this during app initialization or a setup script.
 # ---------------------------------------------------------------------------
 try:
-    enable_metrics(
+    enable_evaluators(
         project_name=project,
-        log_stream_name=log_stream,
+        agent_stream_name=agent_stream,
         metrics=[
-            GalileoMetrics.instruction_adherence,
-            GalileoMetrics.completeness,
+            SplunkAOEvaluators.instruction_adherence,
+            SplunkAOEvaluators.completeness,
         ],
     )
     print("Metrics enabled.\n")
@@ -64,16 +64,16 @@ except Exception as e:
     print(f"Note: Could not configure metrics automatically ({e}). Configure in the Console.\n")
 
 # ---------------------------------------------------------------------------
-# Initialize the Galileo context for this environment
+# Initialize the Splunk AO context for this environment
 # ---------------------------------------------------------------------------
-galileo_context.init(project=project, log_stream=log_stream)
+splunk_ao_context.init(project=project, agent_stream=agent_stream)
 
 # ---------------------------------------------------------------------------
-# LLM client — Galileo wrapper automatically traces all calls
+# LLM client — Splunk AO wrapper automatically traces all calls
 # ---------------------------------------------------------------------------
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
-logger = GalileoLogger(project=project, log_stream=log_stream)
+logger = SplunkAOLogger(project=project, agent_stream=agent_stream)
 
 
 SYSTEM_PROMPT = (
@@ -160,7 +160,7 @@ for conv in conversations:
             "session_type": conv["session_type"],
             "prompt_version": PROMPT_VERSION,
             "turn_number": str(i + 1),
-            "environment": log_stream,
+            "environment": agent_stream,
         }
         tags = [conv["user_tier"], conv["session_type"], PROMPT_VERSION]
 
@@ -214,8 +214,8 @@ for conv in conversations:
     logger.clear_session()
     print(f"  Session complete.\n")
 
-print("All conversations logged to Galileo.")
-print(f"\nOpen the Galileo Console → Project '{project}' → Log Stream '{log_stream}'")
+print("All conversations logged to Splunk AO.")
+print(f"\nOpen the Splunk Agent Observability UI → Project '{project}' → Agent Stream '{agent_stream}'")
 print("\nSuggested next steps:")
 print("  1. Filter sessions by metric score (look for instruction_adherence < 0.6)")
 print("  2. Drill into a failing trace — examine the span tree")

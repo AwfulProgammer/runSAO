@@ -1,15 +1,15 @@
 """
-Graph View Demo — Galileo Observability
+Graph View Demo — Splunk AO Observability
 =======================================
-Demonstrates how to instrument a multi-step research agent with Galileo
+Demonstrates how to instrument a multi-step research agent with Splunk AO
 so that every function appears as a named node in Graph View.
 
 The agent:
   1. Retrieves mock context for a given question
-  2. Synthesizes an answer using the OpenAI API (wrapped by Galileo)
+  2. Synthesizes an answer using the OpenAI API (wrapped by Splunk AO)
   3. Validates the answer against a simple quality check
 
-All LLM calls are automatically logged via `galileo.openai`.
+All LLM calls are automatically logged via `splunk_ao.openai`.
 Each function decorated with `@log` becomes a named span (node) in the trace graph.
 
 This script assumes the .env file is located
@@ -24,15 +24,15 @@ Setup:
 import os
 import sys
 from dotenv import load_dotenv
-from galileo.openai import openai
-from galileo import log, galileo_context
+from splunk_ao.openai import openai
+from splunk_ao import log, splunk_ao_context
 
 load_dotenv("../.env")
-project=os.environ.get("GALILEO_PROJECT_NAME")
-log_stream=os.environ.get("GALILEO_LOG_STREAM")
+project=os.environ.get("SPLUNK_AO_PROJECT")
+agent_stream=os.environ.get("SPLUNK_AO_AGENT_STREAM")
 
 # Confirm that environment variables are properly mapped
-print(f"Loaded env variables: galileo console: {os.environ.get("GALILEO_CONSOLE_URL")} | Project: {project} | Log Stream: {log_stream}")
+print(f"Loaded env variables: splunk ao realm: {os.environ.get("SPLUNK_AO_REALM")} | Project: {project} | Agent Stream: {agent_stream}")
 
 client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
@@ -49,7 +49,7 @@ KNOWLEDGE_BASE = {
 }
 
 
-# ── Agent steps — each decorated with @log becomes a node in Galileo Graph View ─
+# ── Agent steps — each decorated with @log becomes a node in Splunk AO Graph View ─
 
 @log(span_type="retriever", name="retrieve_context")
 def retrieve_context(question: str) -> str:
@@ -134,8 +134,8 @@ def run_agent(question: str) -> dict:
 # ── Main: run several questions to generate diverse traces ────────────────────
 
 if __name__ == "__main__":
-    with galileo_context(project=project, log_stream=log_stream):
-        galileo_context.start_session(name="Lab 04 - Agent Graph")
+    with splunk_ao_context(project=project, agent_stream=agent_stream):
+        splunk_ao_context.start_session(name="Lab 04 - Agent Graph")
         questions = [
             "What is happening with climate change?",
             "How do AI large language models work?",
@@ -150,6 +150,6 @@ if __name__ == "__main__":
 
         print("\n" + "=" * 60)
         print(f"Completed {len(results)} agent runs.")
-    print("Open app.galileo.ai → your project → Traces to see results.")
+    print("Open the Splunk Agent Observability UI → your project → Traces to see results.")
     print("Switch to Graph tab on any trace to see the node graph.")
     print("Navigate to Agent Graph in the sidebar for the aggregate view.")

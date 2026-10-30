@@ -40,13 +40,14 @@ OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
 AGENT_CONTROL_URL = os.environ.get("AGENT_CONTROL_URL")
 AGENT_NAME = os.environ.get("AGENT_CONTROL_AGENT_NAME")
 SPLUNK_AO_API_KEY = os.environ.get("SPLUNK_AO_API_KEY")
-API_KEY_HEADER = os.environ.get("API_KEY_HEADER") or os.environ.get("AGENT_CONTROL_API_KEY_HEADER")
+# SaaS uses the X-SF-Token header; on-prem/standalone deployments use Splunk-AO-API-Key plus SPLUNK_AO_API_KEY
+API_KEY_HEADER = os.environ.get("AGENT_CONTROL_API_KEY_HEADER", "X-SF-Token")
+AGENT_CONTROL_TARGET_TYPE = os.environ.get("AGENT_CONTROL_TARGET_TYPE", "log_stream")
 
 
 import agent_control
 from agent_control import ControlSteerError, ControlViolationError, control
 
-from splunk_ao.agent_streams import get_agent_stream
 from splunk_ao import SplunkAOLogger
 from openai import OpenAI
 
@@ -211,9 +212,6 @@ conn.close()
 logger = SplunkAOLogger(project=project, agent_stream=agent_stream)
 logger.enable_agent_control()
 
-def get_agent_stream_id():
-    agent_stream_data = get_agent_stream(name=agent_stream, project_name=project)
-    return agent_stream_data.id
 
 
 # --------------------------------------------------------------------------------------
@@ -464,7 +462,8 @@ def main():
   
     session_id = logger.start_session(name="Lab 09 - Guardrails")
 
-    agent_stream_id = get_agent_stream_id()
+    # The logger resolves the Agent Stream name to its ID
+    agent_stream_id = logger.agent_stream_id
     print(f"Agent stream ID: {agent_stream_id}")
 
     # Initiate Agent Control agent
@@ -476,7 +475,7 @@ def main():
         api_key_header=API_KEY_HEADER,
         observability_enabled=True,
         observability_sink_name="registered",
-        target_type="log_stream",
+        target_type=AGENT_CONTROL_TARGET_TYPE,
         target_id=agent_stream_id,
     )
 
